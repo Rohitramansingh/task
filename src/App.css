@@ -1,38 +1,76 @@
-.App {
-  text-align: center;
-}
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.ul{
+  width: 300px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  justify-content: space-around;
+  list-style: none;
+  margin-left: auto;
+  
+}
+
+.navbar{
+  background-color: grey;
   color: white;
+  
+  
 }
 
-.App-link {
-  color: #61dafb;
+.img{
+  width: -webkit-fill-available;
+  
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+
+
+.input{
+  
+  width: 400px;
+    
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    display: block;
+
+}
+
+.input_style{
+display:flex;
+flex-direction: column;
+justify-content: space-around;
+}
+
+.btn{
+  background-color: black;
+  color:white;
+}
+
+.home{
+  position: relative;
+}
+
+.head{
+  position: absolute;
+  bottom: 381px;
+  left: 303px;
+  color: white;
+  font-size: -webkit-xxx-large;
+
+}
+
+
+.project{
+  margin-top: 10px;
+  width: 300px;
+  height: 350px;
+  box-shadow: 5px 5px 5px #bdbdbd;
+}
+
+.size{
+  width:300px;
+  height: 300px;
+}
+.service{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
 }
