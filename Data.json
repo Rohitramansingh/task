@@ -1,0 +1,161 @@
+{
+  "users": [
+    
+  ],
+  "Cart":[],
+  "product": [
+    {
+      "name": "Redmi note 8",
+      "id": "1",
+      "price": "10000",
+      "categogary": "Electronic",
+      "tag": "phone",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/phone/phone1.jpeg"
+    },
+    {
+      "id": "2",
+      "name": " Lenovo ideal pad ",
+      "price": "12000",
+      "tag": "laptop",
+      "categogary": "Electronic",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/phone/2.jpeg"
+    },
+    {
+      "name": "Samsung- ",
+      "id": "3",
+      "price": "15000",
+      "categogary": "Electronic",
+      "tag": "tv",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/phone/phone3.jpeg"
+    },
+    {
+      "id": "4",
+      "name": "Boat headphone",
+      "price": "2500",
+      "categogary": "Electronic",
+      "tag": "headphone",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/phone/phone4.jpeg"
+    },
+    {
+      "name": " vivo phone",
+      "id": "5",
+      "price": "25000",
+      "categogary": "Electronic",
+      "tag": "phone",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/phone/phone5.jpeg"
+    },
+    {
+      "id": "6",
+      "name": "Toshibha slim",
+      "price": "25000",
+      "categogary": "Electronic",
+      "tag": "tv",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/Tv/tv1.jpeg"
+    },
+    {
+      "name": "Lg Led",
+      "id": "7",
+      "price": "35000",
+      "categogary": "Electronic",
+      "tag": "tv",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/Tv/tv2.jpeg"
+    },
+    {
+      "name": "Realme slim ",
+      "id": "8",
+      "price": "20000",
+      "categogary": "Electronic",
+      "tag": "tv",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/Tv/tv3.jpeg"
+    },
+    {
+      "id": "9",
+      "name": "Lg ipad Laptop",
+      "price": "35000",
+      "categogary": "Electronic",
+      "tag": "laptop",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert//2.jpeg"
+    },
+    {
+      "name": "mac book",
+      "id": "10",
+      "price": "250000",
+      "categogary": "Electronic",
+      "tag": "laptop",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert//2.jpeg"
+    },
+    {
+      "name": "dell Mh2",
+      "id": "11",
+      "price": "40000",
+      "categogary": "Electronic",
+      "tag": "laptop",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert//2.jpeg"
+    },
+    {
+      "id": "12",
+      "name": "Apple macbook",
+      "price": "50000",
+      "categogary": "Electronic",
+      "tag": "laptop",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert//2.jpeg"
+    },
+    {
+      "name": "Laptop5",
+      "id": "13",
+      "price": "30000",
+      "categogary": "Electronic",
+      "tag": "laptop",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/Tv/tv2.jpeg"
+    },
+    {
+      "id": "14",
+      "name": "Boat booster ",
+      "price": "1500",
+      "categogary": "Accessories",
+      "tag": "headphone",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/Tv/tv2.jpeg"
+    },
+    {
+      "name": "Jbl headset",
+      "id": "15",
+      "price": "1000",
+      "categogary": "Accessories",
+      "tag": "headphone",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/Tv/tv2.jpeg"
+    },
+    {
+      "id": "16",
+      "name": "power bulethooth",
+      "price": "5000",
+      "categogary": "Accessories",
+      "tag": "headphone",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/Tv/tv2.jpeg"
+    },
+    {
+      "name": "Headphone4",
+      "id": "17",
+      "price": "500",
+      "categogary": "Accessories",
+      "tag": "headphone",
+      "description": "Motorola Edge 50 Fusion (Hot Pink, 128 GB)  (8 GB RAM )",
+      "image": "./assert/Tv/tv2.jpeg"
+    }
+  ]
+}
