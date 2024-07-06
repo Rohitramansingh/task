@@ -1,202 +1,63 @@
-import React from "react";
+import React, { useState } from "react";
 import { Field, Formik, useFormik } from 'formik';
 import AddIcon from '@mui/icons-material/Add';
-import { Checkbox, FormControlLabel, FormGroup, MenuItem, Select, Slider, TextField } from "@mui/material";
+import { Checkbox, FormControlLabel, FormGroup, Grid, MenuItem, Select, Slider, TextField } from "@mui/material";
 import { userSchema } from "./User_Schema";
+import Paper from '@mui/material/Paper';
+import BasicModal from "./Modal";
 export default function Form() {
-
-    const initialvalues = {
-        firstname: "",
-        lastname: "",
-        email: "",
-        addressed: "",
-        phone: "",
-        language: [],
-        gender: "",
-        state: "",
-
-
-
-    }
-
-
-
-    const formik = useFormik({
-        initialValues: initialvalues,
-        validationSchema: userSchema,
-        onSubmit: (value) => {
-            console.log(value, "form");
-        }
-    })
-
-    const { handleChange, touched, handleBlur, handleSubmit, errors } = formik
-
-
-
+    const document = ["addhar"];
+    const url = "https://www.godigit.com/content/dam/godigit/directportal/en/contenthm/aadhar-card-download-by-name.jpg"
+    const [img, setImg] = useState("/");
+    const [open, setOpen] = React.useState(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
     return (
-        <div>
-            <h1 className="text-center ">Formik form</h1>
-            <form onSubmit={handleSubmit} className="w-[70%]  mx-auto border border-black bg-slate-600 p-5 ">
-
+        <div >
+            {open && <BasicModal open={open} handleOpen={handleOpen} name="Addhar card" handleClose={handleClose} img={url} />}
+            <Paper className="w-[70%] mx-auto p-5 " elevation={4}>
                 <div>
-                    <h1 className=" ">Personal details</h1>
-                    <div className=" md:grid gap-4 grid-cols-2 space-y-5 md:space-y-1
-                    ">
-                        <div className="space-y-2">
-                            <p className="mx-1 p-0 text-white">first Name</p>
-                            <TextField id="name"
-                                name="firstname"
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                value={formik.values.firstname}
-
-                                className="w-full outline-none bg-white  " variant="outlined" />
-                            {errors.firstname && touched.firstname && <p className="text-xs text-red-500 mx-1 ">{errors.firstname} </p>}
-
+                    <h1 className="bg-amber-700 text-white p-3  ">Personal Details</h1>
+                    <div className=" grid-cols-2 p-3 bg-amber-200 gap-1   mt-5 border ">
+                        <div className="p-2  grid grid-cols-4 ">
+                            <p className="font-semibold text-[15px] m-1 ">FirstName</p>
+                            <Paper className="p-2 col-span-3 " >Rohit</Paper>
                         </div>
 
-                        <div className="space-y-2">
-                            <p className="mx-1 text-white ">Last Name</p>
-                            <TextField id="name"
-                                name="lastname"
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                value={formik.values.lastname}
-
-                                className="w-full outline-none bg-white  " variant="outlined" />
-                            {errors.lastname && touched.lastname && <p className="text-xs text-red-500 mx-1 ">{errors.lastname} </p>}
-
-
+                        <div className="p-2  grid grid-cols-4 ">
+                            <p className="font-semibold text-[15px] m-1 ">LastName</p>
+                            <Paper className="p-2 col-span-3 " >Rohit</Paper>
                         </div>
 
-                        <div className="space-y-2 col-span-2 ">
-                            <p className="mx-1 text-white "> Email</p>
-                            <TextField id="name"
-                                name="email"
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                value={formik.values.email}
-
-                                className="w-full  outline-none bg-white  " variant="outlined" />
-                            {errors.email && touched.email && <p className="text-xs text-red-500 mx-1 ">{errors.email} </p>}
-
-
+                        <div className="p-2  grid grid-cols-4 ">
+                            <p className="font-semibold text-[15px] m-1 ">Age</p>
+                            <Paper className="p-2 col-span-3 " >22</Paper>
                         </div>
 
-                        <div className="space-y-2 col-span-2 ">
-                            <p className="mx-1 text-white "> Addressed</p>
-                            <TextField id="name"
-                                name="addressed"
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                value={formik.values.addressed}
-
-                                className="w-full  outline-none bg-white  " variant="outlined" />
-                            {errors.addressed && touched.addressed && <p className="text-xs text-red-500 mx-1 ">{errors.addressed} </p>}
-
-
+                        <div className="p-2  grid grid-cols-4 ">
+                            <p className="font-semibold text-[15px] m-1 ">Email</p>
+                            <Paper className="p-2 col-span-3 " >rohit@gmail.com</Paper>
                         </div>
 
-                        <div className="space-y-2">
-                            <p className="mx-1 text-white ">Gender</p>
-                            <Select
-                                name="gender"
-                                className="w-full bg-white"
-
-
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                value={formik.values.gender}
-                            >
-                                <MenuItem value={"male"}>male</MenuItem>
-                                <MenuItem value={"female"}>female</MenuItem>
-                                <MenuItem value={"other"}>other</MenuItem>
-                            </Select>
-                            {errors.gender && touched.gender && <p className="text-xs text-red-500 mx-1 ">{errors.gender} </p>}
-
-
+                        <div className="p-2  grid grid-cols-4 ">
+                            <p className="font-semibold text-[15px] m-1 ">Gender</p>
+                            <Paper className="p-2 col-span-3 " >Male</Paper>
                         </div>
 
-
-                        <div className="space-y-2">
-                            <p className="mx-1 text-white">State</p>
-                            <TextField id="name"
-                                name="state"
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                value={formik.values.state}
-
-                                className="w-full outline-none bg-white  " variant="outlined" />
-                            {errors.state && touched.state && <p className="text-xs text-red-500 mx-1 ">{errors.state} </p>}
-
-
+                        <div className="p-2  grid grid-cols-4 ">
+                            <p className="font-semibold text-[15px] m-1 ">AddharCard Number</p>
+                            <Paper className="p-2 col-span-3 " >123456789456</Paper>
                         </div>
 
-
-                        <div className="space-y-2">
-                            <p className="mx-1 text-white ">Phone</p>
-                            <TextField id="name"
-                                name="phone"
-                                type="Number"
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                value={formik.values.phone}
-
-                                className="w-full outline-none bg-white  " variant="outlined" />
-                            {errors.phone && touched.phone && <p className="text-xs text-red-500 mx-1 ">{errors.phone} </p>}
-
-
+                        <div className="p-2  grid grid-cols-4 ">
+                            <p className="font-semibold text-[15px] m-1 ">Phone </p>
+                            <Paper className="p-2 col-span-3 " >Rohit</Paper>
                         </div>
 
-
-                        <div className="space-y-2">
-                            <p className="mx-1 text-white ">Addhar Number</p>
-                            <TextField id="name"
-                                name="addhar"
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                // value={formik.values.firstname}
-                                placeholder="Enter 12 digit Number"
-
-                                className="w-full outline-none bg-white  " variant="outlined" />
-                            {errors.addhar && touched.addhar && <p className="text-xs text-red-500 mx-1 ">{errors.addhar} </p>}
-
-
+                        <div className="p-2  grid grid-cols-4 ">
+                            <p className="font-semibold text-[15px] m-1 ">Occupation</p>
+                            <Paper className="p-2 col-span-3 " >Student</Paper>
                         </div>
-
-
-
-                        <div className="space-y-2">
-                            <p className="mx-1 text-white ">Language Know</p>
-
-                            <div className="border w-full bg-white p-3   ">
-                                <div className="flex space-x-2">
-                                    <input  type="checkbox" name="language" onChange={handleChange} value="English" />
-                                    <p className="text-white">English</p>
-                                </div >
-
-                                <div className="flex space-x-2">
-                                    <input  type="checkbox" name="language" onChange={handleChange} value="Hindi" />
-                                    <p className="text-white">Hindi</p>
-                                </div >
-
-                                <div className="flex space-x-2">
-                                    <input  type="checkbox" name="language" onChange={handleChange} value="Gujarati" />
-                                    <p className="text-white">Gujarati</p>
-                                </div >
-                            </div>
-
-                            {errors.language && touched.language && <p className="text-xs font-bold text-red-500 mx-1 ">{errors.language} </p>}
-
-                        </div>
-
-
-
-
-
-
-
-
 
 
 
@@ -205,15 +66,171 @@ export default function Form() {
 
                 </div>
 
-                <div className="col-span-2 flex justify-end py-2 ">
-                    <button className="bg-yellow-800  border px-4 py-2  text-white">Submit</button>
+
+
+                <div className="mt-4">
+                    <h1 className="bg-amber-700 text-white p-3  ">Addressed Details</h1>
+                    <div className="grid grid-cols-2 p-3 bg-amber-200 gap-1 mt-5 border ">
+                        <div className="p-2  col-span-2 ">
+                            <p className="font-semibold text-[15px] m-1 col-span-1 ">Addressed</p>
+                            <Paper className="p-2  col-span-3" >lig 18 raksha nagar ramjhi jabalpur </Paper>
+                        </div>
+
+                        <div className="p-2   ">
+                            <p className="font-semibold text-[15px] m-1 ">Country</p>
+                            <Paper className="p-2 " >India</Paper>
+                        </div>
+
+                        <div className="p-2   ">
+                            <p className="font-semibold text-[15px] m-1 ">State</p>
+                            <Paper className="p-2 " >Madhaya pradesh</Paper>
+                        </div>
+
+                        <div className="p-2   ">
+                            <p className="font-semibold text-[15px] m-1 ">City</p>
+                            <Paper className="p-2 " >Jabalpur</Paper>
+                        </div>
+
+                        <div className="p-2   ">
+                            <p className="font-semibold text-[15px] m-1 ">Pincode</p>
+                            <Paper className="p-2 " >22222</Paper>
+                        </div>
+
+
+
+
+                    </div>
+
                 </div>
 
 
-            </form>
+
+                <div className="mt-4">
+                    <h1 className="bg-amber-700 text-white p-3  ">Education Details</h1>
+                    <div className="bg-white">
+                        <p className="font-semibold mt-4 px-3  ">10Th Standard</p>
+
+                        <div className="grid grid-cols-3 p-3 bg-amber-200 gap-1 mt-5 border ">
+                            <div className="p-2  col-span-3 ">
+                                <p className="font-semibold text-[15px] m-1 col-span-1 ">School Name</p>
+                                <Paper className="p-2  col-span-3" >lig 18 raksha nagar ramjhi jabalpur </Paper>
+                            </div>
+
+                            < div className="p-2   ">
+                                <p className="font-semibold text-[15px] m-1 ">Percentage %</p>
+                                <Paper className="p-2 " >80%-90%</Paper>
+                            </div>
+
+                            < div className="p-2   ">
+                                <p className="font-semibold text-[15px] m-1 ">Passout year</p>
+                                <Paper className="p-2 " >2019</Paper>
+                            </div>
+
+                            < div className="p-2   ">
+                                <p className="font-semibold text-[15px] m-1 ">Medium</p>
+                                <Paper className="p-2 " >English</Paper>
+                            </div>
 
 
+
+
+
+
+                        </div>
+                    </div>
+
+
+
+                    <div className="bg-white">
+                        <p className="font-semibold mt-4 px-3 ">12Th Standard</p>
+
+                        <div className="grid grid-cols-3  p-3 bg-amber-200 gap-1 mt-5 border ">
+                            <div className="p-2  col-span-3 ">
+                                <p className="font-semibold text-[15px] m-1 col-span-1 ">School Name</p>
+                                <Paper className="p-2  col-span-3" >lig 18 raksha nagar ramjhi jabalpur </Paper>
+                            </div>
+
+                            < div className="p-2   ">
+                                <p className="font-semibold text-[15px] m-1 ">Percentage %</p>
+                                <Paper className="p-2 " >80%-90%</Paper>
+                            </div>
+
+                            < div className="p-2   ">
+                                <p className="font-semibold text-[15px] m-1 ">Passout year</p>
+                                <Paper className="p-2 " >2019</Paper>
+                            </div>
+
+                            < div className="p-2   ">
+                                <p className="font-semibold text-[15px] m-1 ">Medium</p>
+                                <Paper className="p-2 " >English</Paper>
+                            </div>
+                        </div>
+
+
+
+                        {/* collage  */}
+
+
+                        <div className="bg-white">
+                            <p className="font-semibold mt-4 px-3 "> Highest Qualification</p>
+
+                            <div className="grid grid-cols-3 p-3 bg-amber-200 gap-1 mt-5 border ">
+                                <div className="p-2  col-span-3 ">
+                                    <p className="font-semibold text-[15px] m-1 col-span-1 ">School Name</p>
+                                    <Paper className="p-2  col-span-3" >lig 18 raksha nagar ramjhi jabalpur </Paper>
+                                </div>
+
+                                < div className="p-2   ">
+                                    <p className="font-semibold text-[15px] m-1 ">Percentage %</p>
+                                    <Paper className="p-2 " >80%-90%</Paper>
+                                </div>
+
+                                < div className="p-2   ">
+                                    <p className="font-semibold text-[15px] m-1 ">Passout year</p>
+                                    <Paper className="p-2 " >2019</Paper>
+                                </div>
+
+                                < div className="p-2   ">
+                                    <p className="font-semibold text-[15px] m-1 ">Medium</p>
+                                    <Paper className="p-2 " >English</Paper>
+                                </div>
+
+                            </div>
+                        </div>
+
+
+
+                    </div>
+
+
+
+                    <div className="mt-4">
+                        <h1 className=" bg-amber-700 text-white p-3  ">Document</h1>
+                        <div className="  bg-amber-200  p-4 gap-2 mt-5 border grid grid-cols-3 ">
+
+
+
+                            {
+                                document.map((val) => {
+                                    <div className="border" onClick={handleOpen}>
+                                        <img src={url} className="" />
+                                        <p className="mx-1">{val}</p>
+                                    </div>
+
+                                })
+                            }
+
+
+                        </div>
+
+                    </div>
+
+
+
+
+                </div>
+            </Paper>
         </div>
-
     )
+
 }
