@@ -1,0 +1,1894 @@
+"use client";
+
+import Layout from "@/app/components/Layout";
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  InputLabel,
+  Menu,
+  MenuItem,
+  Radio,
+  RadioGroup,
+  Select,
+  TextField,
+} from "@mui/material";
+import Joi, { object } from "joi";
+import moment from "moment";
+import Image from "next/image";
+import { toast } from "react-toastify";
+import "../../../../styles/common.css";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Add, ArrowBackIos, Delete, Edit } from "@mui/icons-material";
+import TwitterIcon from "../../../../../public/assets/twiter-icon.svg";
+import { GETAPI, MULTIPARTFORMAPI, PATCHAPI } from "@/app/utils/common";
+import InstaIcon from "../../../../../public/assets/instagram-icon.svg";
+import facebookIcon from "../../../../../public/assets/facebook-icon.svg";
+import placeholderimage from "../../../../../public/assets/PlaceholderImage.png";
+import {
+  CountryDropdown,
+  CountryRegionData,
+} from "react-country-region-selector";
+import {
+  AboutMeListType,
+  Media,
+  MemoriesListType,
+  userDetailType,
+} from "../userdetails/page";
+
+export type SOCIETIES = {
+  clubId: string;
+  clubName: string;
+};
+export type PROMPTS = {
+  promptId: string;
+  prompt: string;
+};
+export type INTERESTS = {
+  interestId: string;
+  interest: string;
+};
+
+const Events = () => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const search = searchParams.get("id");
+
+  const [data, setData] = useState<userDetailType>({
+    personalInfoList: {
+      fullName: "",
+      email: "",
+      dob: "",
+      gender: null,
+      relationshipStatus: null,
+      profileImage: "",
+      profileMedia: [],
+    },
+    socialLinkList: [],
+    otherInfoList: {
+      universityId: "",
+      university_course_id: "",
+      boroughId: "",
+      universityName: "",
+      courseName: "",
+      graduateYear: "",
+      country: "",
+      boroughName: "",
+    },
+    interestList: [],
+    societiesList: [],
+    memoriesList: [],
+    promptList: [],
+  });
+  const [errors, setErrors] = useState({
+    personalInfoList: {
+      fullName: "",
+      email: "",
+      dob: "",
+      gender: "",
+      relationshipStatus: "",
+      profileImage: "",
+      profileMedia: [],
+    },
+    socialLinkList: [
+      {
+        link: "",
+        linkType: "",
+      },
+      {
+        link: "",
+        linkType: "",
+      },
+      {
+        link: "",
+        linkType: "",
+      },
+    ],
+    otherInfoList: {
+      universityId: "",
+      university_course_id: "",
+      boroughId: "",
+      universityName: "",
+      courseName: "",
+      graduateYear: "",
+      country: "",
+      boroughName: "",
+    },
+    interestList: "",
+    societiesList: "",
+    memoriesList: [
+      {
+        caption: "",
+        memories: "",
+      },
+    ],
+    promptList: [
+      {
+        promptId: "",
+        promptAnswerId: "",
+        prompt: "",
+        promptAnswer: "",
+      },
+    ],
+  });
+  const [isEdited, setIsEdited] = useState({
+    personalInfoList: {
+      fullName: false,
+      email: false,
+      dob: false,
+      gender: false,
+      relationshipStatus: false,
+      profileImage: false,
+      profileMedia: false,
+    },
+    socialLinkList: false,
+    otherInfoList: {
+      universityId: false,
+      university_course_id: false,
+      boroughId: false,
+      universityName: false,
+      courseName: false,
+      graduateYear: false,
+      country: false,
+      boroughName: false,
+    },
+    interestList: false,
+    societiesList: false,
+    memoriesList: false,
+    promptList: false,
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [validate, setValidate] = useState(false);
+  const [editButton, setEditButton] = useState(true);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [oldMemoriesArray, setOldMemoriesArray] = useState<any>([]);
+
+  // After editing profile image (updated file object )
+  const [profileimageObject, setProfileImageObject] = useState(null);
+
+  // After editing profile medias (updated file object array)
+  const [profileMediaArray, setProfileMediaArray] = useState<Media[]>([]);
+
+  // After editing memories (updated file object array)
+  const [memoriesArray, setMemoriesArray] = useState<any>([]);
+  const [openMemoryModal, setOpenMemoryModal] = useState(false);
+  const [editedIndexes, setEditedIndexes] = useState<number[]>([]);
+  const [openedModalMemoryIndex, setOpenedModalMemoryIndex] = useState(0);
+
+  const [allPrompts, setAllPrompts] = useState<PROMPTS[]>([]);
+  const [allSocieties, setAllSocieties] = useState<SOCIETIES[]>([]);
+  const [allInterests, setAllInterests] = useState<INTERESTS[]>([]);
+  const [SelectedSocieties, setSelectedSocieties] = useState<string[]>([]);
+  const [SelectedInterests, setSelectedInterests] = useState<string[]>([]);
+
+  const [anchorEl, setAnchorEl] = useState<any>(null);
+  const open = Boolean(anchorEl);
+  const handleOpenSocialMenu = (event: any) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleSelectSocialMenu = (type: string) => {
+    if (type.length > 0) {
+      let temparray = data.socialLinkList;
+      temparray.push({
+        link: "",
+        linkType: type,
+        userLinkId: "",
+      });
+      setData((prev) => ({
+        ...prev,
+        socialLinkList: temparray,
+      }));
+    }
+    setAnchorEl(null);
+  };
+
+  useEffect(() => {
+    if (search && search.length > 0) {
+      getUserData();
+      getRequiredData();
+    }
+  }, [search]);
+
+  const getUserData = async () => {
+    setLoading(true);
+    const response: any = await GETAPI(
+      `admin/getUserDetailById?userId=${search}`
+    );
+    if (response.code == 1) {
+      setData(response.data);
+      const DATA = response?.data;
+      if (DATA?.otherInfoList && DATA?.otherInfoList?.universityId) {
+        const SocietiesResponse: any = await GETAPI(
+          `admin/getClubList?universityId=${DATA?.otherInfoList?.universityId}`
+        );
+        if (SocietiesResponse.code == 1) {
+          setAllSocieties(SocietiesResponse.data);
+          setLoading(false);
+        } else {
+          setLoading(false);
+          toastError(response.message);
+        }
+      }
+
+      const selectedClub =
+        DATA?.societiesList?.map((item: any, index: number) => {
+          return item.clubId;
+        }) || [];
+      const selectedInterest =
+        DATA?.interestList?.map((item: any, index: number) => {
+          return item.interestId;
+        }) || [];
+      setProfileMediaArray(DATA?.personalInfoList?.profileMedia || []);
+      setMemoriesArray(DATA?.memoriesList || []);
+      setOldMemoriesArray(DATA?.memoriesList || []);
+      setSelectedSocieties(selectedClub);
+      setSelectedInterests(selectedInterest);
+    } else {
+      setLoading(false);
+      toastError(response.message);
+    }
+  };
+
+  const getRequiredData = async () => {
+    const InterestResponse: any = await GETAPI(`admin/getInterestList`);
+    const PromptResponse: any = await GETAPI(`admin/getPromptList`);
+    if (InterestResponse.code == 1 && PromptResponse.code == 1) {
+      setAllInterests(InterestResponse.data);
+      setAllPrompts(PromptResponse.data);
+    } else {
+      toastError(InterestResponse.message || PromptResponse.message);
+    }
+  };
+
+  /** Profile Image selection */
+  const handleMediaFileSelect = (e: any) => {
+    setValidate(false);
+    setEditButton(false);
+    setIsEdited((prev) => ({
+      ...prev,
+      personalInfoList: {
+        ...isEdited.personalInfoList,
+        profileImage: true,
+      },
+    }));
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const imageurl = URL.createObjectURL(file);
+      setProfileImageObject(file);
+      setData((prev) => ({
+        ...prev,
+        personalInfoList: {
+          ...data.personalInfoList,
+          profileImage: imageurl,
+        },
+      }));
+    }
+  };
+
+  /** Profile media change handler */
+  const handleMediaProfileSelect = (
+    e: any,
+    type: number,
+    isprofile?: boolean
+  ) => {
+    setValidate(false);
+    setEditButton(false);
+    const file = e.target.files && e.target.files[0];
+    const imageurl = URL.createObjectURL(file);
+    if (file.type.includes("video")) {
+      const audio = new Audio();
+      audio.src = URL.createObjectURL(file);
+      audio.onloadedmetadata = async () => {
+        if (Math.floor(audio.duration) > 600) {
+          toastError("Video duration should be less or equal to 10 minutes");
+          return;
+        } else {
+          if (type == 1) {
+            updateProfile(file, imageurl);
+          } else if (type == 2) {
+            updateMemories(file, imageurl);
+          } else if (type == 3) {
+            if (!isprofile) {
+              AddMedia(file, imageurl, false);
+            } else if (isprofile) {
+              AddMedia(file, imageurl, isprofile);
+            }
+          } else return;
+        }
+      };
+    } else {
+      if (type == 1) {
+        updateProfile(file, imageurl);
+      } else if (type == 2) {
+        updateMemories(file, imageurl);
+      } else if (type == 3) {
+        if (!isprofile) {
+          AddMedia(file, imageurl, false);
+        } else if (isprofile) {
+          AddMedia(file, imageurl, isprofile);
+        }
+      } else return;
+    }
+  };
+
+  /** Update Profile Media */
+  const updateProfile = (file: any, imageurl: any) => {
+    setIsEdited((prev) => ({
+      ...prev,
+      personalInfoList: { ...isEdited.personalInfoList, profileMedia: true },
+    }));
+    const tempdata: any =
+      data.personalInfoList.profileMedia &&
+      data.personalInfoList.profileMedia.map((item, id) => {
+        if (id == selectedImageIndex) {
+          return {
+            type: file.type.includes("video") ? 2 : 1,
+            url: imageurl,
+          };
+        } else {
+          return item;
+        }
+      });
+    const tempdataarray: any = profileMediaArray.map(
+      (item: any, id: number) => {
+        if (id == selectedImageIndex) {
+          return { ...item, url: file };
+        } else {
+          return item;
+        }
+      }
+    );
+
+    setProfileMediaArray(tempdataarray);
+    setData((prev) => ({
+      ...prev,
+      personalInfoList: {
+        ...data.personalInfoList,
+        profileMedia: tempdata,
+      },
+    }));
+  };
+
+  /** personalInfo Change handler */
+  const personalInfoChangeHandler = (e: any) => {
+    setValidate(false);
+    setEditButton(false);
+    const { name, value } = e.target;
+    setIsEdited((prev) => ({
+      ...prev,
+      personalInfoList: { ...isEdited.personalInfoList, [name]: true },
+    }));
+    setData((prev) => ({
+      ...prev,
+      personalInfoList: {
+        ...data.personalInfoList,
+        [name]: value,
+      },
+    }));
+  };
+
+  /** Interest and society change handler */
+  const handleSelectMultiple = (item: any, type: number) => {
+    setEditButton(false);
+    setValidate(false);
+    if (type == 1) {
+      setIsEdited((prev) => ({ ...prev, interestList: true }));
+      const exist = SelectedInterests.filter((interest, index: number) => {
+        return interest == item.interestId;
+      });
+      if (exist && exist.length > 0) {
+        const temp = SelectedInterests.filter((interest, index: number) => {
+          return interest !== item.interestId;
+        });
+        setSelectedInterests(temp);
+      } else {
+        setSelectedInterests((prev) => [...prev, item.interestId]);
+      }
+    } else if (type == 2) {
+      setIsEdited((prev) => ({ ...prev, societiesList: true }));
+      const exist = SelectedSocieties.filter((club, index: number) => {
+        return club == item.clubId;
+      });
+      if (exist && exist.length > 0) {
+        const temp = SelectedSocieties.filter((club, index: number) => {
+          return club !== item.clubId;
+        });
+        setSelectedSocieties(temp);
+      } else {
+        setSelectedSocieties((prev) => [...prev, item.clubId]);
+      }
+    } else {
+      return;
+    }
+  };
+
+  /** Social Links input change handler */
+  const socialLinkInputType = (e: any) => {
+    setValidate(false);
+    setEditButton(false);
+    setIsEdited((prev) => ({ ...prev, socialLinkList: true }));
+    const { name, value } = e.target;
+    const temparray = data.socialLinkList.map((item, index) => {
+      if (item.linkType == name) {
+        return {
+          ...item,
+          link: value,
+        };
+      } else return item;
+    });
+    setData((prev) => ({
+      ...prev,
+      socialLinkList: temparray,
+    }));
+  };
+
+  /** Prompt change handler */
+  const promptChangeHandler = (e: any) => {
+    setValidate(false);
+    setEditButton(false);
+    setIsEdited((prev) => ({ ...prev, promptList: true }));
+    const { name, value } = e.target;
+    const temparray: any = data.promptList.map(
+      (item: AboutMeListType, index) => {
+        if (index.toString() == name) {
+          return {
+            ...item,
+            promptAnswer: value,
+          };
+        } else return item;
+      }
+    );
+    setData((prev) => ({
+      ...prev,
+      promptList: temparray,
+    }));
+  };
+
+  /** Prompt question change handler */
+  const handlerPromptQueChange = (item: PROMPTS, index: number) => {
+    setValidate(false);
+    setEditButton(false);
+    setIsEdited((prev) => ({ ...prev, promptList: true }));
+    const tempArray: any = data.promptList.map((prompt, id) => {
+      if (index == id) {
+        return {
+          ...prompt,
+          prompt: item.prompt,
+          promptId: item.promptId,
+          // promptAnswer : ""
+        };
+      } else return prompt;
+    });
+    setData((prev) => ({ ...prev, promptList: tempArray }));
+  };
+
+  /** Memorie's caption change handler */
+  const memoriesChangeHandler = (e: any) => {
+    setValidate(false);
+    setEditButton(false);
+    const { name, value } = e.target;
+    setIsEdited((prev) => ({ ...prev, memoriesList: true }));
+    const temparray: any = data.memoriesList.map(
+      (item: MemoriesListType, index) => {
+        if (index.toString() == name) {
+          return {
+            ...item,
+            caption: value,
+          };
+        } else return item;
+      }
+    );
+    setData((prev) => ({
+      ...prev,
+      memoriesList: temparray,
+    }));
+  };
+
+  /** Memorie's Images Update */
+  const updateMemories = (file: any, imageurl: any) => {
+    if (
+      data.memoriesList.length > 0 &&
+      memoriesArray &&
+      memoriesArray.length > 0
+    ) {
+      setEditButton(false);
+      setIsEdited((prev) => ({ ...prev, memoriesList: true }));
+      const temp_memories_data: any = data.memoriesList[
+        openedModalMemoryIndex
+      ].memories.map((memo, id) => {
+        if (id == selectedImageIndex) {
+          return {
+            type: file.type.includes("video") ? 2 : 1,
+            url: imageurl,
+          };
+        } else {
+          return memo;
+        }
+      });
+      const updatedMemories: any = data.memoriesList.map((item, index) => {
+        if (index == openedModalMemoryIndex) {
+          return {
+            ...item,
+            memories: temp_memories_data,
+          };
+        } else {
+          return item;
+        }
+      });
+
+      const temp_memories_state: any = memoriesArray[
+        openedModalMemoryIndex
+      ].memories.map((memo: any, id: any) => {
+        if (id == selectedImageIndex) {
+          return {
+            type: file.type.includes("video") ? 2 : 1,
+            url: file,
+          };
+        } else {
+          return memo;
+        }
+      });
+      const updatedMemoryArray: any = memoriesArray.map(
+        (item: any, index: number) => {
+          if (index == openedModalMemoryIndex) {
+            return {
+              ...item,
+              memories: temp_memories_state,
+            };
+          } else {
+            return item;
+          }
+        }
+      );
+
+      const avaliable =
+        editedIndexes.length > 0 &&
+        editedIndexes.find((id) => id == selectedImageIndex);
+      if (!avaliable) setEditedIndexes([...editedIndexes, selectedImageIndex]);
+
+      setMemoriesArray(updatedMemoryArray);
+      setData((prev) => ({
+        ...prev,
+        memoriesList: updatedMemories,
+      }));
+    }
+  };
+
+  /** DELETE profile media / memories images */
+  const deleteImages = (
+    item: any,
+    index: number,
+    type: number,
+    memoryIndex?: number
+  ) => {
+    setEditButton(false);
+    if (type == 1) {
+      setIsEdited((prev) => ({
+        ...prev,
+        personalInfoList: { ...isEdited.personalInfoList, profileMedia: true },
+      }));
+      const tempimages: any =
+        data.personalInfoList.profileMedia &&
+        data.personalInfoList.profileMedia.filter((image, id) => {
+          return id !== index;
+        });
+      const tempprofilemedia = profileMediaArray.filter(
+        (image: any, id: any) => {
+          return id !== index;
+        }
+      );
+      setProfileMediaArray(tempprofilemedia);
+      setData((prev) => ({
+        ...prev,
+        personalInfoList: {
+          ...data.personalInfoList,
+          profileMedia: tempimages,
+        },
+      }));
+    } else {
+      setIsEdited((prev) => ({
+        ...prev,
+        memoriesList: true,
+      }));
+      if (memoryIndex) {
+        const selectedMemory = data.memoriesList[memoryIndex];
+        const updatedMemory = selectedMemory.memories.filter((memo, memoId) => {
+          return memoId !== index;
+        });
+        const updatedMemoryArray = memoriesArray[memoryIndex].memories.filter(
+          (memo: any, memoId: any) => {
+            return memoId !== index;
+          }
+        );
+        const tempMemories = data.memoriesList.map((MEMO, ID) => {
+          if (ID == memoryIndex) {
+            return {
+              ...MEMO,
+              memories: updatedMemory,
+            };
+          } else {
+            return MEMO;
+          }
+        });
+        const tempMemoriesArray = memoriesArray.map((MEMO: any, ID: any) => {
+          if (ID == memoryIndex) {
+            return {
+              ...MEMO,
+              memories: updatedMemoryArray,
+            };
+          } else {
+            return MEMO;
+          }
+        });
+        setMemoriesArray(tempMemoriesArray);
+        setData((prev) => ({
+          ...prev,
+          memoriesList: tempMemories,
+        }));
+      }
+    }
+  };
+
+  /** ADD profile media / memories images */
+  const AddMedia = (file: any, imageurl: any, isprofile: boolean) => {
+    setEditButton(false);
+    if (isprofile) {
+      setIsEdited((prev) => ({
+        ...prev,
+        personalInfoList: { ...isEdited.personalInfoList, profileMedia: true },
+      }));
+      setProfileMediaArray([
+        ...profileMediaArray,
+        { url: file, type: file.type.includes("video") ? 2 : 1 },
+      ]);
+      setData((prev) => ({
+        ...prev,
+        personalInfoList: {
+          ...data.personalInfoList,
+          profileMedia: [
+            ...data.personalInfoList.profileMedia,
+            { url: imageurl, type: file.type.includes("video") ? 2 : 1 },
+          ],
+        },
+      }));
+    } else {
+      const tempMemories: any = data.memoriesList.map((MEMO, ID) => {
+        if (ID == openedModalMemoryIndex) {
+          return {
+            ...MEMO,
+            memories: [
+              ...MEMO.memories,
+              { url: imageurl, type: file.type.includes("video") ? 2 : 1 },
+            ],
+          };
+        } else {
+          return MEMO;
+        }
+      });
+      const tempMemoriesArray: any = memoriesArray.map((MEMO: any, ID: any) => {
+        if (ID == openedModalMemoryIndex) {
+          return {
+            ...MEMO,
+            memories: [
+              ...MEMO.memories,
+              { url: file, type: file.type.includes("video") ? 2 : 1 },
+            ],
+          };
+        } else {
+          return MEMO;
+        }
+      });
+      setIsEdited((prev) => ({
+        ...prev,
+        memoriesList: true,
+      }));
+      setMemoriesArray(tempMemoriesArray);
+      setData((prev) => ({
+        ...prev,
+        memoriesList: tempMemories,
+      }));
+    }
+  };
+
+  const schema = Joi.object({
+    fullName: Joi.string()
+      .required()
+      .messages({ "string.empty": "Name is not allowed to be empty" }),
+    dob: Joi.date().iso().max(new Date()).required().messages({
+      "string.empty": "Date of birth is not allowed to be empty",
+      "date.max": "Please enter valid date",
+    }),
+    gender: Joi.string().valid("1", "2", "3").required(),
+    relationshipStatus: Joi.string().valid("0", "1", "2", "3", "4").required(),
+    profileImage: Joi.string().uri().required(),
+    interestList: Joi.array().min(1).required().messages({
+      "array.min": "Please select at least one interest",
+    }),
+    profileMedia: Joi.array()
+      .min(0)
+      .items(
+        Joi.object({
+          url: Joi.string().min(1).required(),
+          type: Joi.number()
+            .optional()
+            .allow(1 | 2),
+        })
+      )
+      .required(),
+    socialLinkList: Joi.array()
+      .items(
+        Joi.object({
+          linkType: Joi.string().optional().allow(""),
+          userLinkId: Joi.string().optional().allow(""),
+          link: Joi.string().uri().required().messages({
+            "string.uri": "Social Link must be a valid uri",
+            "string.empty": "Social Link is not allowed to be empty",
+          }),
+        })
+      )
+      .min(0)
+      .required(),
+    societiesList: Joi.array().min(1).required().messages({
+      "array.min": "Please select at least one club",
+    }),
+    promptList: Joi.array()
+      .items(
+        Joi.object({
+          promptId: Joi.string().optional().allow(""),
+          promptAnswerId: Joi.string().optional().allow(""),
+          prompt: Joi.string().required(),
+          promptAnswer: Joi.string()
+            .required()
+            .messages({ "string.empty": "Prompt answer can not be empty" }),
+        })
+      )
+      .min(1)
+      .required(),
+    memoriesList: Joi.array()
+      .items(
+        Joi.object({
+          memoriesId: Joi.string().optional().allow(""),
+          caption: Joi.string().required().messages({
+            "string.empty": "Memory caption can not be empty",
+          }),
+          memories: Joi.array()
+            .items(
+              Joi.object({
+                url: Joi.string().uri().required(),
+                type: Joi.number()
+                  .optional()
+                  .allow(1 | 2),
+              })
+            )
+            .min(1)
+            .required(),
+        })
+      )
+      .min(1)
+      .required()
+      .min(0),
+  });
+
+  /** EDIT Button Click */
+  const onEditButtonClick = async () => {
+    const reqData = {
+      fullName: data.personalInfoList.fullName,
+      interestList: SelectedInterests,
+      dob: data.personalInfoList.dob,
+      gender: data.personalInfoList.gender?.toString(),
+      relationshipStatus: data.personalInfoList.relationshipStatus?.toString(),
+      profileImage: data.personalInfoList.profileImage,
+      profileMedia:
+        data.personalInfoList.profileMedia && data.personalInfoList.profileMedia
+          ? data.personalInfoList.profileMedia
+          : [],
+      socialLinkList: data.socialLinkList,
+      societiesList: SelectedSocieties,
+      promptList: data.promptList,
+      memoriesList: data.memoriesList.length > 0 ? data.memoriesList : [],
+    };
+    setValidate(true);
+    const { error: validationResult }: any = schema.validate(reqData, {
+      abortEarly: false,
+    });
+    const _error_: any = validationResult?.details.reduce(
+      (acc: any, curr: any) => {
+        const path = curr.path.join(".");
+        acc[path] = curr.message;
+        return acc;
+      },
+      {}
+    );
+    if (_error_) {
+      // Mapping errors to your state structure
+      const newErrorState: any = {
+        personalInfoList: {
+          fullName: _error_["fullName"] || "",
+          email: _error_["email"] || "",
+          dob: _error_["dob"] || "",
+          gender: _error_["gender"] || "",
+          relationshipStatus: _error_["relationshipStatus"] || "",
+          profileImage: _error_["profileImage"] || "",
+          profileMedia: reqData.profileMedia.map((_: any, index: any) => ({
+            url: _error_[`profileMedia.${index}.url`] || "",
+            type: _error_[`profileMedia.${index}.type`] || "",
+          })),
+        },
+        socialLinkList: reqData.socialLinkList.map((_, index) => ({
+          linkType: _error_[`socialLinkList.${index}.linkType`] || "",
+          link: _error_[`socialLinkList.${index}.link`] || "",
+        })),
+        interestList: _error_[`interestList`] || "",
+        societiesList: _error_[`societiesList`] || "",
+        memoriesList: reqData.memoriesList.map((mem, memIndex) => ({
+          memoriesId: "",
+          caption: _error_[`memoriesList.${memIndex}.caption`] || "",
+          memories: mem.memories.map((_, memSubIndex) => ({
+            url:
+              _error_[`memoriesList.${memIndex}.memories.${memSubIndex}.url`] ||
+              "",
+            type:
+              _error_[
+                `memoriesList.${memIndex}.memories.${memSubIndex}.type`
+              ] || "",
+          })),
+        })),
+        promptList: reqData.promptList.map((_, index) => ({
+          promptId: "",
+          promptAnswerId: "",
+          prompt: _error_[`promptList.${index}.prompt`] || "",
+          promptAnswer: _error_[`promptList.${index}.promptAnswer`] || "",
+        })),
+      };
+      console.log(_error_);
+      console.log(newErrorState);
+      setErrors(newErrorState);
+    } else {
+      setValidate(false);
+      await handleEditAPICall();
+    }
+  };
+
+  /** EDIT API CALL */
+  const handleEditAPICall = async () => {
+    setLoading(true);
+    const oldProfileMedia =
+      profileMediaArray.length > 0 &&
+      profileMediaArray.filter((item) => {
+        return typeof item.url == "string";
+      });
+
+    let formdata: any = new FormData();
+    formdata.append("userId", search ? search : "");
+    isEdited.personalInfoList.fullName &&
+      formdata.append("fullName", data.personalInfoList.fullName);
+    isEdited.interestList &&
+      formdata.append("interestId", JSON.stringify(SelectedInterests));
+    isEdited.societiesList &&
+      formdata.append("clubId", JSON.stringify(SelectedSocieties));
+    isEdited.otherInfoList.country &&
+      formdata.append("country", data.otherInfoList.country);
+    // isEdited.otherInfoList.boroughName &&
+    //   formdata.append("boroughName", data.otherInfoList.boroughName);
+    isEdited.promptList &&
+      formdata.append("prompt", JSON.stringify(data.promptList));
+    isEdited.socialLinkList &&
+      formdata.append("socialLinkId", JSON.stringify(data.socialLinkList));
+    isEdited.personalInfoList.profileMedia &&
+      formdata.append("old_profileMedia_url", JSON.stringify(oldProfileMedia));
+    isEdited.personalInfoList.profileImage &&
+      formdata.append(
+        "profileImage",
+        profileimageObject
+          ? profileimageObject
+          : data.personalInfoList.profileImage
+          ? data.personalInfoList.profileImage
+          : ""
+      );
+    isEdited.personalInfoList.dob &&
+      formdata.append(
+        "dob",
+        data?.personalInfoList?.dob
+          ? data?.personalInfoList?.dob.toString()
+          : ""
+      );
+    isEdited.personalInfoList.gender &&
+      formdata.append(
+        "gender",
+        data?.personalInfoList?.gender
+          ? data?.personalInfoList?.gender.toString()
+          : ""
+      );
+    isEdited.personalInfoList.relationshipStatus &&
+      formdata.append(
+        "relationshipStatus",
+        data?.personalInfoList?.relationshipStatus
+          ? data?.personalInfoList?.relationshipStatus.toString()
+          : ""
+      );
+    isEdited.personalInfoList.profileMedia &&
+      profileMediaArray.forEach((mediaItem: Media, index: number) => {
+        if (typeof mediaItem.url == "object") {
+          console.log("mediaItem", mediaItem);
+          formdata.append(`profileMedia`, mediaItem.url);
+        }
+      });
+
+    const response = await MULTIPARTFORMAPI(
+      "PATCH",
+      "admin/editUser",
+      formdata
+    );
+
+    if (response && response.code == 1) {
+      setLoading(false);
+      router.back();
+    } else {
+      setLoading(false);
+      toastError(response.message);
+    }
+  };
+
+  /** MEMORY EDIT API CALL */
+  const onModalMemoryEditClicked = async () => {
+    setLoading(true);
+    const editedIndexesSet = new Set(editedIndexes);
+    const oldMemories =
+      memoriesArray[openedModalMemoryIndex].memories.filter(
+        (_: any, index: any) => typeof _.url == "string"
+      ) || [];
+    const updatedMemories =
+      memoriesArray[openedModalMemoryIndex].memories.filter(
+        (_: any, index: any) => typeof _.url == "object"
+      ) || [];
+
+    let formdata: any = new FormData();
+    formdata.append("userId", search ? search : "");
+    formdata.append(
+      "caption",
+      data.memoriesList[openedModalMemoryIndex].caption
+    );
+    formdata.append(
+      "memoriesId",
+      data.memoriesList[openedModalMemoryIndex].memoriesId
+    );
+    formdata.append("old_memories_url", JSON.stringify(oldMemories));
+    updatedMemories.forEach((mediaItem: Media, index: number) => {
+      formdata.append(`memories`, mediaItem.url);
+    });
+
+    const response = await MULTIPARTFORMAPI(
+      "PATCH",
+      "admin/editUser",
+      formdata
+    );
+    if (response && response.code == 1) {
+      toastSuccess(response.message);
+      getUserData();
+      setOpenMemoryModal(false);
+    } else {
+      toastError(response.message);
+      setOpenMemoryModal(false);
+      setLoading(false);
+    }
+  };
+
+  const toastError = (message: string) => {
+    toast.error(message, {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+  };
+  const toastSuccess = (message: string) => {
+    toast.success(message, {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+  };
+
+  const isFBLink = data?.socialLinkList.filter((item) => item.linkType == "1");
+  const isIGLink = data?.socialLinkList.filter((item) => item.linkType == "2");
+  const isTWLink = data?.socialLinkList.filter((item) => item.linkType == "3");
+
+  return (
+    <Layout>
+      <div className="lg:m-7 m-5 flex flex-row justify-center items-center">
+        <button onClick={() => router.back()}>
+          <ArrowBackIos
+            style={{ color: "#008C92", height: "35px", width: "35px" }}
+          />
+        </button>
+        <p className="w-full lg:text-3xl text-xl text-black font-semibold">
+          Edit User
+        </p>
+      </div>
+      <div className="relative overflow-x-auto lg:mx-7 mx-5 px-3">
+        {/* PROFILE IMAGES */}
+        <div className="w-full my-5">
+          <FormLabel
+            style={{ color: "black" }}
+            id="demo-radio-buttons-group-label"
+          >
+            <h2 className="text-lg">Profile Image</h2>
+          </FormLabel>
+          <Image
+            src={data?.personalInfoList?.profileImage || placeholderimage}
+            alt="Profile Image"
+            height={100}
+            width={120}
+            className="mt-3 object-cover rounded-full w-[120px] h-[120px]"
+          />
+          {validate && errors?.personalInfoList?.profileImage.length > 0 && (
+            <p className="text-sm text-red-500">
+              *{errors?.personalInfoList?.profileImage}
+            </p>
+          )}
+          <input
+            type="file"
+            id="image-input"
+            className="hidden"
+            accept="image/*"
+            name="image_api_src"
+            onChange={handleMediaFileSelect}
+          />
+          <label htmlFor="image-input" className="hover:cursor-pointer">
+            <div className="absolute top-[55px] left-[105px] bg-[#008C92] rounded-full px-1 mt-3">
+              <Edit style={{ color: "#fff", fontSize: 15 }} />
+            </div>
+          </label>
+        </div>
+        {/* PROFILE MEDIA */}
+        {data?.personalInfoList?.profileMedia &&
+          data?.personalInfoList?.profileMedia?.length > 0 && (
+            <div className="w-full my-5">
+              <input
+                type="file"
+                id="add-image-input"
+                className="hidden"
+                accept="image/* , video/*"
+                name={`image`}
+                onChange={(e) => handleMediaProfileSelect(e, 3, true)}
+              />
+              <FormLabel
+                className="flex"
+                style={{ color: "black" }}
+                id="demo-radio-buttons-group-label"
+              >
+                <h2 className="text-lg mr-5">Profile Media</h2>
+                {data.personalInfoList.profileMedia.length < 6 && (
+                  <label
+                    htmlFor="add-image-input"
+                    className="cursor-pointer bg-[#008C92] rounded-md text-white px-2 justify-center items-center flex"
+                  >
+                    <Add /> Add Media
+                  </label>
+                )}
+              </FormLabel>
+              <div className="flex flex-wrap mt-3">
+                {data?.personalInfoList?.profileMedia?.length > 0 &&
+                  data?.personalInfoList?.profileMedia.map((url, index) => {
+                    return (
+                      <div className="mr-5">
+                        {url?.url.length > 0 &&
+                          (url?.type == 1 ? (
+                            <Image
+                              key={index}
+                              src={url?.url || placeholderimage}
+                              alt="Profile Image"
+                              height={120}
+                              width={120}
+                              className="rounded-md object-cover !w-[150px] !h-[150px]"
+                            />
+                          ) : (
+                            <video
+                              src={url?.url}
+                              className="w-[150px] h-[150px] object-cover"
+                              controls
+                            />
+                          ))}
+                        <input
+                          type="file"
+                          id="media-image-input"
+                          className="hidden"
+                          accept="image/* , video/*"
+                          name={`image_${index}`}
+                          onChange={(e) => handleMediaProfileSelect(e, 1)}
+                        />
+                        <div className="flex justify-between items-center m-2">
+                          <label
+                            className="hover:cursor-pointer"
+                            htmlFor="media-image-input"
+                            onClick={() => setSelectedImageIndex(index)}
+                          >
+                            <div className="bg-[#008C92] rounded-full px-1 mr-3">
+                              <Edit style={{ color: "#fff", fontSize: 15 }} />
+                            </div>
+                          </label>
+                          {data?.personalInfoList?.profileMedia.length > 1 && (
+                            <button
+                              onClick={() => deleteImages(url, index, 1)}
+                              className="bg-red-500 rounded-full px-1"
+                            >
+                              <Delete style={{ color: "#fff", fontSize: 15 }} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
+        <div className="flex flex-wrap w-full">
+          {/* FULLNAME */}
+          <div className="lg:w-1/2 w-full my-5 pr-5">
+            <TextField
+              className="w-full bg-white"
+              id="outlined-search"
+              label="Name"
+              type="text"
+              name="fullName"
+              value={data?.personalInfoList?.fullName}
+              onChange={(e) => personalInfoChangeHandler(e)}
+            />
+            {validate && errors?.personalInfoList?.fullName.length > 0 && (
+              <p className="text-sm text-red-500">
+                *{errors?.personalInfoList?.fullName}
+              </p>
+            )}
+          </div>
+          {/* EMAIL */}
+          <div className="lg:w-1/2 w-full my-5">
+            <TextField
+              className="w-full bg-white"
+              id="outlined-search"
+              label="Email"
+              type="text"
+              name="email"
+              value={data?.personalInfoList?.email}
+              disabled
+            />
+          </div>
+          {/* DOB */}
+          <div className="lg:w-1/3 w-full my-5 pr-5">
+            <TextField
+              className="w-full bg-white"
+              id="outlined-search"
+              label="Birthday"
+              type="date"
+              name="dob"
+              inputProps={{ max: moment(new Date()).format("YYYY-MM-DD") }}
+              value={
+                data?.personalInfoList?.dob &&
+                data?.personalInfoList?.dob.length > 0
+                  ? data.personalInfoList.dob
+                  : new Date()
+              }
+              onChange={(e) => personalInfoChangeHandler(e)}
+            />
+            {validate && errors?.personalInfoList?.dob.length > 0 && (
+              <p className="text-sm text-red-500">
+                *{errors?.personalInfoList?.dob}
+              </p>
+            )}
+          </div>
+          {/* INTERESTS */}
+          {allInterests && (
+            <div className="lg:w-1/3 w-full my-5 pr-5">
+              <FormControl className="w-full bg-white">
+                <InputLabel id="demo-simple-select-label">Interests</InputLabel>
+                <Select
+                  className="w-full"
+                  multiple
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  value={SelectedInterests}
+                  label="Interests"
+                  name="restaurant"
+                >
+                  {allInterests.length > 0 &&
+                    allInterests.map((item, index) => {
+                      const checked = SelectedInterests.includes(
+                        item.interestId
+                      );
+                      return (
+                        <MenuItem
+                          onClick={() => handleSelectMultiple(item, 1)}
+                          key={index}
+                          value={item.interestId}
+                          className={`${
+                            checked ? "!bg-[#6bb4b8] text-white my-1" : ""
+                          }`}
+                        >
+                          {/* <Checkbox
+                            style={{ color: "#008C92" }}
+                            checked={checked}
+                          /> */}
+                          {item.interest}
+                        </MenuItem>
+                      );
+                    })}
+                </Select>
+              </FormControl>
+              {validate && errors?.interestList.length > 0 && (
+                <p className="text-sm text-red-500">*{errors?.interestList}</p>
+              )}
+            </div>
+          )}
+          {/* SOCIETIES */}
+          {allSocieties && (
+            <div className="lg:w-1/3 w-full my-5 ">
+              <FormControl className="w-full bg-white">
+                <InputLabel id="demo-simple-select-label">Societies</InputLabel>
+                <Select
+                  multiple
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  value={SelectedSocieties}
+                  label="Societies"
+                >
+                  {allSocieties.length > 0 &&
+                    allSocieties.map((item, index) => {
+                      const checked = SelectedSocieties.includes(item.clubId);
+                      return (
+                        <MenuItem
+                          onClick={() => handleSelectMultiple(item, 2)}
+                          key={index}
+                          value={item.clubId}
+                          className={`${
+                            checked ? "!bg-[#6bb4b8] text-white my-1" : ""
+                          }`}
+                        >
+                          {/* <Checkbox
+                          style={{ color: "#008C92" }}
+                          checked={checked}
+                        /> */}
+                          {item.clubName}
+                        </MenuItem>
+                      );
+                    })}
+                </Select>
+              </FormControl>
+              {validate && errors?.societiesList.length > 0 && (
+                <p className="text-sm text-red-500">*{errors?.societiesList}</p>
+              )}
+            </div>
+          )}
+          {/* UNIVERSITY NAME */}
+          <div className="lg:w-1/3 w-full my-5 pr-5">
+            <TextField
+              className="w-full bg-white"
+              id="outlined-search"
+              label="University"
+              type="text"
+              name="email"
+              value={data?.otherInfoList?.universityName}
+              disabled
+              // onChange={(e) => handleChange(e)}
+            />
+          </div>
+          {/* COOURSE NAME */}
+          <div className="lg:w-1/3 w-full my-5 pr-5">
+            <TextField
+              className="w-full bg-white"
+              id="outlined-search"
+              label="Course"
+              type="text"
+              name="email"
+              value={data?.otherInfoList?.courseName}
+              disabled
+              // onChange={(e) => handleChange(e)}
+            />
+          </div>
+          {/* GRADUATION YEAR */}
+          <div className="lg:w-1/3 w-full my-5">
+            <TextField
+              className="w-full bg-white"
+              id="outlined-search"
+              label="Graduate Year"
+              type="text"
+              name="email"
+              value={data?.otherInfoList?.graduateYear}
+              disabled
+              // onChange={(e) => handleChange(e)}
+            />
+          </div>
+          {/* BOROUGH NAME */}
+          <div className="lg:w-1/2 w-full my-5 pr-5">
+            <TextField
+              className="w-full bg-white"
+              id="outlined-search"
+              label="Borough"
+              type="text"
+              name="email"
+              value={data?.otherInfoList?.boroughName}
+              // onChange={(e) => {}}
+            />
+          </div>
+          {/* COUNRTY NAME */}
+          <div className="lg:w-1/2 w-full mt-1">
+            <p className="relative top-[10px] left-2  w-fit px-1 text-[12px] bg-gradient-to-b from-[#f4f4f4] to-white text-gray-500">
+              Nationality
+            </p>
+            <CountryDropdown
+              labelType="full"
+              classes="h-[55px] w-full border-2 border-[#ccc] px-2 rounded-[5px]"
+              value={data?.otherInfoList?.country}
+              onChange={(val) => {
+                setEditButton(false);
+                setIsEdited((prev) => ({
+                  ...isEdited,
+                  otherInfoList: { ...isEdited.otherInfoList, country: true },
+                }));
+                setData((prev) => ({
+                  ...prev,
+                  otherInfoList: { ...data.otherInfoList, country: val },
+                }));
+              }}
+            />
+          </div>
+          {/* GENDER */}
+          <div className="lg:w-1/2 w-full my-5 pr-5">
+            <FormControl>
+              <FormLabel
+                style={{ color: "black" }}
+                id="demo-radio-buttons-group-label"
+              >
+                <h2 className="text-lg">Gender</h2>
+              </FormLabel>
+              <RadioGroup
+                aria-labelledby="demo-radio-buttons-group-label"
+                name="gender"
+                value={data?.personalInfoList?.gender}
+                color="#008C92"
+                onChange={(e) => personalInfoChangeHandler(e)}
+              >
+                <div className="lg:flex-row flex-col flex">
+                  <FormControlLabel
+                    style={{ color: "#000" }}
+                    value={1}
+                    control={<Radio style={{ color: "#008C92" }} />}
+                    label="Male"
+                    onChange={() => {
+                      setData((prev) => ({ ...prev, RecommendType: "1" }));
+                    }}
+                  />
+                  <FormControlLabel
+                    style={{ color: "#000" }}
+                    value={2}
+                    control={<Radio style={{ color: "#008C92" }} />}
+                    label="Female"
+                    onChange={() => {
+                      setData((prev) => ({ ...prev, RecommendType: "2" }));
+                    }}
+                  />
+                  <FormControlLabel
+                    style={{ color: "#000" }}
+                    value={3}
+                    control={<Radio style={{ color: "#008C92" }} />}
+                    label="Non-Binary"
+                    onChange={() => {
+                      setData((prev) => ({ ...prev, RecommendType: "2" }));
+                    }}
+                  />
+                </div>
+              </RadioGroup>
+            </FormControl>
+            {validate && errors?.personalInfoList?.gender.length > 0 && (
+              <p className="text-sm text-red-500">
+                *{errors?.personalInfoList.gender}
+              </p>
+            )}
+          </div>
+          {/* RELATIONSHIP STATUS */}
+          <div className="lg:w-1/2 w-full my-5 ">
+            <FormControl>
+              <FormLabel
+                style={{ color: "black" }}
+                id="demo-radio-buttons-group-label"
+              >
+                <h2 className="text-lg">Relationship Status</h2>
+              </FormLabel>
+              <RadioGroup
+                aria-labelledby="demo-radio-buttons-group-label"
+                name="relationshipStatus"
+                value={data?.personalInfoList?.relationshipStatus}
+                color="#008C92"
+                onChange={(e) => personalInfoChangeHandler(e)}
+              >
+                <div className="lg:flex-row flex-col flex">
+                  <FormControlLabel
+                    style={{ color: "#000" }}
+                    value={1}
+                    control={<Radio style={{ color: "#008C92" }} />}
+                    label="Single"
+                    onChange={() => {
+                      setData((prev) => ({ ...prev, RecommendType: "1" }));
+                    }}
+                  />
+                  <FormControlLabel
+                    style={{ color: "#000" }}
+                    value={2}
+                    control={<Radio style={{ color: "#008C92" }} />}
+                    label="Complicated"
+                    onChange={() => {
+                      setData((prev) => ({ ...prev, RecommendType: "2" }));
+                    }}
+                  />
+                  <FormControlLabel
+                    style={{ color: "#000" }}
+                    value={3}
+                    control={<Radio style={{ color: "#008C92" }} />}
+                    label="Taken"
+                    onChange={() => {
+                      setData((prev) => ({ ...prev, RecommendType: "2" }));
+                    }}
+                  />
+                  <FormControlLabel
+                    style={{ color: "#000" }}
+                    value={4}
+                    control={<Radio style={{ color: "#008C92" }} />}
+                    label="Married"
+                    onChange={() => {
+                      setData((prev) => ({ ...prev, RecommendType: "2" }));
+                    }}
+                  />
+                </div>
+              </RadioGroup>
+            </FormControl>
+            {validate &&
+              errors?.personalInfoList?.relationshipStatus.length > 0 && (
+                <p className="text-sm text-red-500">
+                  *{errors?.personalInfoList.gender}
+                </p>
+              )}
+          </div>
+        </div>
+
+        {/* SOCIALLINK */}
+        <div className="w-full my-6">
+          <FormLabel
+            style={{ color: "black" }}
+            id="demo-radio-buttons-group-label"
+          >
+            <h2 className="text-lg mb-5">
+              Social Link
+              {data.socialLinkList && data.socialLinkList.length < 3 && (
+                <span className="bg-[#008C92] rounded-full p-1 ml-5">
+                  <button
+                    className="p-0 m-0"
+                    id="basic-button"
+                    aria-controls={open ? "basic-menu" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={open ? "true" : undefined}
+                    onClick={handleOpenSocialMenu}
+                  >
+                    <Add
+                      id="demo-simple-select-label"
+                      style={{ color: "#fff", fontSize: "20px" }}
+                    />
+                  </button>
+                  <Menu
+                    id="basic-menu"
+                    anchorEl={anchorEl}
+                    open={open}
+                    onClose={() => handleSelectSocialMenu("")}
+                    MenuListProps={{
+                      "aria-labelledby": "basic-button",
+                    }}
+                  >
+                    <MenuItem
+                      disabled={isFBLink.length > 0 ? true : false}
+                      onClick={() => handleSelectSocialMenu("1")}
+                    >
+                      Facebook
+                    </MenuItem>
+                    <MenuItem
+                      disabled={isIGLink.length > 0 ? true : false}
+                      onClick={() => handleSelectSocialMenu("2")}
+                    >
+                      Instagram
+                    </MenuItem>
+                    <MenuItem
+                      disabled={isTWLink.length > 0 ? true : false}
+                      onClick={() => handleSelectSocialMenu("3")}
+                    >
+                      Twitter
+                    </MenuItem>
+                  </Menu>
+                </span>
+              )}
+            </h2>
+          </FormLabel>
+          <div className="lg:w-1/2 w-full">
+            {data?.socialLinkList &&
+              data?.socialLinkList.length > 0 &&
+              data.socialLinkList.map((sociallink, index) => {
+                return (
+                  <>
+                    <div className="flex my-3">
+                      <Image
+                        src={
+                          sociallink.linkType == "1"
+                            ? facebookIcon
+                            : sociallink.linkType == "2"
+                            ? InstaIcon
+                            : TwitterIcon
+                        }
+                        alt="facebook"
+                        height={30}
+                        width={30}
+                        className="mr-5"
+                      />
+                      <TextField
+                        className="w-full bg-white"
+                        id="outlined-search"
+                        label="SocialLink"
+                        type="url"
+                        name={sociallink.linkType}
+                        value={sociallink.link}
+                        onChange={(e) => socialLinkInputType(e)}
+                      />
+                    </div>
+                    {validate &&
+                      errors?.socialLinkList.length > 0 &&
+                      errors?.socialLinkList[index]?.link &&
+                      errors?.socialLinkList[index]?.link.length > 0 && (
+                        <p className="text-sm text-red-500">
+                          *{errors?.socialLinkList[index].link}
+                        </p>
+                      )}
+                  </>
+                );
+              })}
+          </div>
+        </div>
+
+        {/* ABOUT ME */}
+        {data?.promptList && data.promptList.length > 0 && (
+          <div className="w-full my-6">
+            <FormLabel
+              style={{ color: "black" }}
+              id="demo-radio-buttons-group-label"
+            >
+              <h2 className="text-lg mb-5">About Me</h2>
+            </FormLabel>
+            <div className="w-full flex flex-wrap">
+              {data.promptList.map((aboutme, index) => {
+                return (
+                  <div
+                    className={`lg:w-1/2 w-full flex flex-col mb-5 ${
+                      index % 2 == 0 ? "lg:pr-5 pr-0" : ""
+                    } `}
+                    key={index}
+                  >
+                    <FormControl className="w-full bg-white">
+                      <InputLabel id="demo-simple-select-label">
+                        Prompt
+                      </InputLabel>
+                      <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={aboutme.promptId}
+                        label="Prompt"
+                        // onChange={handleChange}
+                        name="restaurant"
+                      >
+                        {allPrompts &&
+                          allPrompts.length > 0 &&
+                          allPrompts.map((item, id) => {
+                            return (
+                              <MenuItem
+                                onClick={() =>
+                                  handlerPromptQueChange(item, index)
+                                }
+                                value={item.promptId}
+                                key={id}
+                              >
+                                {item.prompt}
+                              </MenuItem>
+                            );
+                          })}
+                      </Select>
+                    </FormControl>
+                    {validate && errors.promptList[index].prompt.length > 0 && (
+                      <p className="text-sm text-red-500">
+                        *{errors.promptList[index].prompt}
+                      </p>
+                    )}
+                    <TextField
+                      className="w-full mt-3 bg-white"
+                      id="outlined-search"
+                      label="Prompt Answer"
+                      type="text"
+                      name={index.toString()}
+                      value={aboutme.promptAnswer}
+                      multiline
+                      minRows={3}
+                      onChange={(e) => promptChangeHandler(e)}
+                    />
+                    {validate &&
+                      errors.promptList[index].promptAnswer.length > 0 && (
+                        <p className="text-sm text-red-500">
+                          *{errors.promptList[index].promptAnswer}
+                        </p>
+                      )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* MEMORIES */}
+        {data?.memoriesList && data?.memoriesList?.length > 0 && (
+          <div className="w-full my-6">
+            <FormLabel
+              style={{ color: "black" }}
+              id="demo-radio-buttons-group-label"
+            >
+              <h2 className="text-lg mb-5">Memories</h2>
+            </FormLabel>
+            <div className="w-full flex flex-wrap">
+              {oldMemoriesArray.map((memory: any, index: number) => {
+                return (
+                  <div className="w-full flex flex-col mb-7" key={index}>
+                    <div className="flex ">
+                      <TextField
+                        className="w-full lg:w-1/3 bg-white"
+                        id="outlined-search"
+                        label="Name"
+                        type="text"
+                        name={`${index.toString()}`}
+                        value={memory.caption}
+                        onChange={(e) => memoriesChangeHandler(e)}
+                        disabled
+                      />
+                      <button
+                        className="hover:cursor-pointer w-[40px] ml-5"
+                        onClick={() => {
+                          setOpenMemoryModal(true);
+                          setOpenedModalMemoryIndex(index);
+                        }}
+                      >
+                        <div className="bg-[#008C92] rounded-full p-2">
+                          <Edit style={{ color: "#fff", fontSize: 20 }} />
+                        </div>
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap mt-3">
+                      {memory?.memories &&
+                        memory.memories.length > 0 &&
+                        memory.memories.map((item: any, id: any) => {
+                          return (
+                            <div className="flex flex-col">
+                              {item.type == 1 ? (
+                                <Image
+                                  alt="image"
+                                  src={item.url || placeholderimage}
+                                  className="h-[120px] w-[120px] mr-5 rounded-md object-cover"
+                                  height={100}
+                                  width={100}
+                                />
+                              ) : (
+                                <video
+                                  src={item.url}
+                                  className="h-[120px] w-[120px] mr-5 rounded-md object-cover"
+                                  controls
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* EDIT BUTTON */}
+      <div className="w-full flex justify-end items-end lg:px-10 p-10">
+        <Button
+          variant="contained"
+          style={{ backgroundColor: `${editButton ? "" : "#008c92"}` }}
+          onClick={onEditButtonClick}
+          disabled={editButton}
+        >
+          <p className="px-2 py-1">
+            {search && search?.length > 0 ? "Edit" : "Add"}
+          </p>
+        </Button>
+      </div>
+
+      <Dialog
+        fullWidth
+        open={openMemoryModal}
+        onClose={() => {
+          setOpenMemoryModal(false);
+        }}
+      >
+        <DialogTitle>Edit Memory</DialogTitle>
+        <DialogContent className="w-full">
+          {data.memoriesList.length > 0 && (
+            <>
+              <TextField
+                className="w-full my-5 bg-white"
+                id="outlined-search"
+                label="Name"
+                type="text"
+                name={`${openedModalMemoryIndex.toString()}`}
+                value={data.memoriesList[openedModalMemoryIndex].caption}
+                onChange={(e) => memoriesChangeHandler(e)}
+              />
+              <input
+                type="file"
+                id="add-memory-input"
+                className="hidden"
+                accept="image/* , video/*"
+                name={`image`}
+                onChange={(e) => handleMediaProfileSelect(e, 3, false)}
+              />
+              <label
+                htmlFor="add-memory-input"
+                className="cursor-pointer bg-[#008C92] rounded-md h-10 w-[140px] mb-5 text-white px-2 justify-center items-center flex"
+              >
+                <Add /> Add Memory
+              </label>
+              <div className="flex flex-wrap">
+                {validate &&
+                  errors.memoriesList[openedModalMemoryIndex].caption.length >
+                    0 && (
+                    <p className="text-sm text-red-500">
+                      *{errors.memoriesList[openedModalMemoryIndex].caption}
+                    </p>
+                  )}
+
+                {data.memoriesList[openedModalMemoryIndex].memories.length >
+                  0 &&
+                  data.memoriesList[openedModalMemoryIndex].memories.map(
+                    (item: any, index: any) => {
+                      return (
+                        <div className="flex flex-col mb-3">
+                          {item.type == 1 ? (
+                            <Image
+                              alt="image"
+                              src={item.url || placeholderimage}
+                              className="h-[120px] w-[120px] mr-5 rounded-md object-cover"
+                              height={100}
+                              width={100}
+                            />
+                          ) : (
+                            <video
+                              src={item.url}
+                              className="h-[120px] w-[120px] mr-5 rounded-md object-cover"
+                              controls
+                            />
+                          )}
+                          <input
+                            type="file"
+                            id="memories-image-input"
+                            className="hidden"
+                            accept="image/* , video/*"
+                            name={`image_${index}`}
+                            onChange={(e) => handleMediaProfileSelect(e, 2)}
+                          />
+                          <div className="flex justify-between items-center mr-5 mt-3 px-3">
+                            <label
+                              className="hover:cursor-pointer"
+                              htmlFor="memories-image-input"
+                              onClick={() => {
+                                setSelectedImageIndex(index);
+                              }}
+                            >
+                              <div className="bg-[#008C92] rounded-full px-1">
+                                <Edit style={{ color: "#fff", fontSize: 15 }} />
+                              </div>
+                            </label>
+                            {data.memoriesList[openedModalMemoryIndex].memories
+                              .length > 1 && (
+                              <button
+                                onClick={() =>
+                                  deleteImages(
+                                    item,
+                                    openedModalMemoryIndex,
+                                    2,
+                                    index
+                                  )
+                                }
+                                className="bg-red-500 rounded-full px-1"
+                              >
+                                <Delete
+                                  style={{ color: "#fff", fontSize: 15 }}
+                                />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                  )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setOpenMemoryModal(false);
+            }}
+            variant="outlined"
+            color="error"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => onModalMemoryEditClicked()}
+            variant="contained"
+            style={{ backgroundColor: "#008C92" }}
+          >
+            Edit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {loading && (
+        <div className="loaderCenter">
+          <span className="loader"></span>
+        </div>
+      )}
+    </Layout>
+  );
+};
+
+const EditUser = () => {
+  return (
+    <Suspense>
+      <Events />
+    </Suspense>
+  );
+};
+export default EditUser;
