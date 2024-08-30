@@ -1,0 +1,468 @@
+"use client";
+
+import Layout from "@/app/components/Layout";
+import { MinusIcon } from "@heroicons/react/24/outline";
+import CloseIcon from '@mui/icons-material/Close';
+import {
+  Add,
+  ArrowBackIos,
+  Delete,
+  Diversity1Rounded,
+  ImageOutlined,
+  VideocamOutlined,
+} from "@mui/icons-material";
+import { Button, FormLabel, Paper, TextareaAutosize, TextField } from "@mui/material";
+import Joi from "joi";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { GETAPI, PATCHAPI, POSTAPI } from "@/app/utils/common";
+import { toast } from "react-toastify";
+import "../../../../styles/common.css";
+import AuthHandler from "@/app/components/Auth";
+import Image from "next/image";
+import InputFileUpload from "@/app/components/UploadButton";
+import MenuImgCard from "@/app/components/MenuImgCard";
+
+export type RestaurantDetailType = {
+  restaurantName: string;
+  restaurantAdminEmail: string;
+  restaurantImageLink: string[];
+  restaurantVideoLink: string[];
+};
+
+const Events = () => {
+  const searchParams = useSearchParams();
+  const search = searchParams.get("id");
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [imageObject, setImageObject] = useState({});
+  const [data, setData] = useState<RestaurantDetailType>({
+    restaurantName: "",
+    restaurantAdminEmail: "",
+    restaurantImageLink: [],
+    restaurantVideoLink: [],
+  });
+  const [validate, setValidate] = useState(false);
+  const [menuImages, setMenuImages] = useState([]);
+  const [errors, setErrors] = useState<RestaurantDetailType>({
+    restaurantName: "",
+    restaurantAdminEmail: "",
+    restaurantImageLink: [],
+    restaurantVideoLink: [],
+  });
+
+  /** Change handler title/description */
+  const handleChange = (e: any, item?: any, index?: number) => {
+    setValidate(false);
+    const { name, value } = e.target;
+    setData((prev: any) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleMenuImages = (file: any) => {
+    setMenuImages((prev: any) => {
+      return [...prev, file];
+    });
+  };
+
+ 
+
+  const removeMenuImgage = (id) => {
+    const arr = menuImages;
+    const temp: any = [];
+    arr.map((val, index) => {
+      if (index !== id) temp.push(val);
+    });
+
+    setMenuImages(temp);
+  };
+
+  console.log("menufile", menuImages);
+
+  /** Image selection */
+  const handleMediaFileSelect = (e: any, video: boolean) => {
+    const file = e.target.files && e.target.files[0];
+    if (video) {
+      if (file) {
+        const videourl = URL.createObjectURL(file);
+        setImageObject(file);
+        let tempArray: string[] = [];
+        tempArray = data.restaurantVideoLink;
+        tempArray.push(videourl);
+        setData((prev) => ({
+          ...prev,
+          restaurantVideoLink: tempArray,
+        }));
+      }
+    } else {
+      if (file) {
+        const imageurl = URL.createObjectURL(file);
+        setImageObject(file);
+        let tempArray: string[] = [];
+        // tempArray = data.restaurantImageLink;
+        tempArray.push(imageurl);
+        setData((prev) => ({
+          ...prev,
+          restaurantImageLink: tempArray,
+        }));
+      }
+    }
+  };
+
+  const schema = Joi.object({
+    restaurantName: Joi.string().trim().min(1).required().messages({
+      "string.empty": "Name cannot be empty",
+      "any.required": "Name is required",
+    }),
+    restaurantAdminEmail: Joi.string()
+      .trim()
+      .email({ tlds: { allow: false } })
+      .required()
+      .messages({
+        "string.empty": `Email cannot be an empty field`,
+        "any.required": `Email is a required.`,
+      }),
+    restaurantImageLink: Joi.array().optional(),
+    restaurantVideoLink: Joi.array().optional(),
+  });
+
+  const onAddEditButtonClick = async () => {
+    setValidate(true);
+    const { error: validationError } = schema.validate(data, {
+      abortEarly: false,
+    });
+    if (validationError) {
+      const errors = validationError.details.reduce((acc: any, curr) => {
+        const path = curr.path.join(".");
+        acc[path] = curr.message;
+        return acc;
+      }, {});
+      const newErrorState: any = {
+        restaurantName: errors.restaurantName || "",
+        restaurantAdminEmail: errors.restaurantAdminEmail || "",
+      };
+      setErrors(newErrorState);
+    } else {
+      setErrors({
+        restaurantName: "",
+        restaurantAdminEmail: "",
+        restaurantImageLink: [],
+        restaurantVideoLink: [],
+      });
+      setValidate(false);
+      setLoading(true);
+      if (search && search.length > 0) {
+      } else {
+      }
+    }
+  };
+
+  const toastError = (message: string) => {
+    toast.error(message, {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+  };
+
+  return (
+    <Layout>
+      <div className="lg:m-7 m-5 flex flex-row justify-center items-center">
+        <button onClick={() => router.back()}>
+          <ArrowBackIos
+            style={{ color: "#008C92", height: "35px", width: "35px" }}
+          />
+        </button>
+        <p className="w-full lg:text-3xl text-xl text-black font-semibold">
+          {search && search.length > 0 ? "Edit Restaurant" : "Add Restaurant"}
+        </p>
+      </div>
+      <div className="relative overflow-x-auto lg:mx-7 mx-5">
+        <div>
+          <p>Image</p>
+          <label
+            className="flex items-center justify-start"
+            htmlFor="image-input"
+          >
+            <p className="w-44 rounded py-3 px-3 my-3 cursor-pointer border-4  bg-white">
+              <ImageOutlined />
+              <span className="ml-2">Select Images</span>
+            </p>
+            {validate &&
+              data.restaurantImageLink.length > 0 &&
+              data.restaurantImageLink[0] && (
+                <p className="text-sm text-red-500">
+                  *{errors.restaurantImageLink[0]}
+                </p>
+              )}
+          </label>
+          <div className="w-full">
+            <input
+              type="file"
+              id="image-input"
+              className="hidden"
+              accept="image/*"
+              name="link_image"
+              onChange={(e) => handleMediaFileSelect(e, false)}
+            />
+    {/* Display Image  */}
+            <div className="flex flex-wrap">
+              {data.restaurantImageLink.length > 0 &&
+                data.restaurantImageLink.map((item: string, index: number) => {
+                  return (
+                    <div className="border  ">
+                      <p className="flex justify-end "><CloseIcon  /></p>
+
+                    <Image
+                      key={index}
+                      className="w-[150px]  h-auto p-1  mr-2 object-contain"
+                      src={data.restaurantImageLink[index]}
+                      alt="IMAGE"
+                      height={250}
+                      width={500}
+                    />
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 w-full ">
+          <div className="w-full my-5">
+            <TextField
+              className=" w-full  bg-white"
+              id="outlined-search"
+              label="Restaurant Name"
+              type="text"
+              name="restaurantName"
+              value={data.restaurantName}
+              onChange={(e) => handleChange(e)}
+            />
+            {validate &&
+              errors?.restaurantName &&
+              errors.restaurantName.length > 0 && (
+                <p className="text-sm text-red-500">*{errors.restaurantName}</p>
+              )}
+          </div>
+
+          <div className="w-full my-5">
+            <TextField
+              className=" w-full  bg-white"
+              id="outlined-search"
+              label="Email"
+              type="text"
+              name="email"
+              value={data.restaurantName}
+              onChange={(e) => handleChange(e)}
+            />
+            {validate &&
+              errors?.restaurantName &&
+              errors.restaurantName.length > 0 && (
+                <p className="text-sm text-red-500">*{errors.restaurantName}</p>
+              )}
+          </div>
+
+          <div className="w-full my-5">
+            <TextField
+              className=" w-full  bg-white"
+              id="outlined-search"
+              label="Contact Number"
+              type="text"
+              name="Contact"
+              value={data.restaurantName}
+              onChange={(e) => handleChange(e)}
+            />
+            {validate &&
+              errors?.restaurantName &&
+              errors.restaurantName.length > 0 && (
+                <p className="text-sm text-red-500">*{errors.restaurantName}</p>
+              )}
+          </div>
+
+          <div className="w-full my-5">
+            <TextField
+              className=" w-full  bg-white"
+              id="outlined-search"
+              label="website Link"
+              type="text"
+              name="website"
+              value={data.restaurantName}
+              onChange={(e) => handleChange(e)}
+            />
+            {validate &&
+              errors?.restaurantName &&
+              errors.restaurantName.length > 0 && (
+                <p className="text-sm text-red-500">*{errors.restaurantName}</p>
+              )}
+          </div>
+
+          <div className="w-full col-span-2  my-5">
+            <TextField
+              className=" w-full  bg-white"
+              id="outlined-search"
+              label="Addressed"
+              type="text"
+              name="restaurantName"
+              value={data.restaurantName}
+              onChange={(e) => handleChange(e)}
+            />
+            {validate &&
+              errors?.restaurantName &&
+              errors.restaurantName.length > 0 && (
+                <p className="text-sm text-red-500">*{errors.restaurantName}</p>
+              )}
+          </div>
+
+          {/* Textarea  */}
+
+          <div className="w-full col-span-2  my-5">
+            <textarea
+              className="w-full p-5  "
+              placeholder="Write Description"
+              rows={7}
+            />
+          </div>
+
+          {/* Multiple Image Upload  Button */}
+          <div className="w-fit col-span-2 ">
+            <p>Upload Menu Images</p>
+            <p className=" rounded py-1 px-1 my-3 cursor-pointer border-4  flex w-fit   bg-white">
+              {/* <ImageOutlined  className=" "/> */}
+              <InputFileUpload handleMenuImages={handleMenuImages} />
+              {/* <span className="ml-2"><AddIcon/></span> */}
+            </p>
+            {validate &&
+              data.restaurantImageLink.length > 0 &&
+              data.restaurantImageLink[0] && (
+                <p className="text-sm text-red-500">
+                  *{errors.restaurantImageLink[0]}
+                </p>
+              )}
+          </div>
+
+          <div>
+            {menuImages && menuImages.length > 0 && (
+              <div className="grid grid-cols-4 gap-2 ">
+                {menuImages.map((val, index) => {
+                  return (
+                    <MenuImgCard
+                      img={val}
+                      removeMenuImgage={removeMenuImgage}
+                      id={index}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Gallery And Media file upload */}
+
+       
+
+
+
+
+        {/* <div className="w-full">
+          <input
+            type="file"
+            id="image-input"
+            className="hidden"
+            accept="image/*"
+            name="link_image"
+            onChange={(e) => handleMediaFileSelect(e, false)}
+          />
+
+          <div className="flex flex-wrap">
+            {data.restaurantImageLink.length > 0 &&
+              data.restaurantImageLink.map((item: string, index: number) => {
+                return (
+                  <Image
+                    key={index}
+                    className="w-[150px] h-auto my-5 mr-2 object-contain"
+                    src={data.restaurantImageLink[index]}
+                    alt="IMAGE"
+                    height={250}
+                    width={500}
+                  />
+                );
+              })}
+          </div>
+        </div> */}
+        <div className="w-full ">
+          <input
+            type="file"
+            id="video-input"
+            className="hidden"
+            accept="video/mp4,video/x-m4v,video/*"
+            name="link_video"
+            onChange={(e) => handleMediaFileSelect(e, true)}
+          />
+          <label
+            className="flex items-center justify-start"
+            htmlFor="video-input"
+          >
+            <p className="w-44 rounded py-3 px-3 my-3 cursor-pointer border-4  bg-white">
+              <VideocamOutlined />
+              <span className="ml-2">Select Videos</span>
+            </p>
+            {validate &&
+              data.restaurantVideoLink.length > 0 &&
+              data.restaurantVideoLink[0] && (
+                <p className="text-sm text-red-500">
+                  *{errors.restaurantVideoLink[0]}
+                </p>
+              )}
+          </label>
+          <div className="flex flex-wrap">
+            {data.restaurantVideoLink.length > 0 &&
+              data.restaurantVideoLink.map((item: string, index: number) => {
+                return (
+                  <video
+                    key={index}
+                    className="w-[150px] h-auto my-5 mr-2"
+                    src={data.restaurantVideoLink[index]}
+                  />
+                );
+              })}
+          </div>
+        </div>
+      </div>
+      <div className="lg:w-1/2 w-full flex justify-end items-end lg:px-0 px-5">
+        <Button
+          variant="contained"
+          style={{ backgroundColor: "#008c92" }}
+          onClick={onAddEditButtonClick}
+        >
+          <p className="px-2 py-1">
+            {search && search?.length > 0 ? "Edit" : "Add"}
+          </p>
+        </Button>
+      </div>
+      {loading && (
+        <div className="loaderCenter">
+          <span className="loader"></span>
+        </div>
+      )}
+    </Layout>
+  );
+};
+
+function AddEditRestaurant() {
+  return (
+    <Suspense>
+      <Events />
+    </Suspense>
+  );
+}
+
+export default AuthHandler(AddEditRestaurant);
