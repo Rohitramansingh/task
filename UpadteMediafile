@@ -1,0 +1,79 @@
+"use client"
+
+import React, { useRef, useState } from 'react';
+import MedaiDisplay from './MediaDisplay';
+
+const MediaUploader = () => {
+  const inputFile = useRef(null) 
+  const [media, setMedia] = useState([]);
+  const [editIndex,setEditIndex]=useState(null);
+
+  const handleFileChange = (e) => {
+    if (editIndex !== null) {
+      // Replace the file at editIndex with the new file
+      const files = Array.from(e.target.files);
+      const temp = [...media];
+      temp[editIndex] = files[0];
+      setMedia(temp);
+      setEditIndex(null); // Reset edit index
+    } else {
+      // Add new files
+      const files = Array.from(e.target.files);
+      const temp = [...media, ...files];
+      setMedia(temp);
+    }
+  };
+
+  const onButtonClick = (index) => {
+    setEditIndex(index);
+    // `current` points to the mounted file input element
+    inputFile.current.click();
+  };
+  const removeMediaFile = (id) => {
+    const temp = media
+    const arr = [];
+    temp.map((val, index) => index !== id && arr.push(val))
+
+    setMedia(arr);
+
+  }
+
+  console.log("media", media);
+
+  const renderMedia = (file, index) => {
+    const url = URL.createObjectURL(file);
+    if (file.type.startsWith('image/')) {
+      return <MedaiDisplay onButtonClick={onButtonClick} removeMediaFile={removeMediaFile} file={file} url={url} id={index} isimg={true} />
+    }
+    if (file.type.startsWith('video/')) {
+      return <MedaiDisplay  onButtonClick={onButtonClick}  removeMediaFile={removeMediaFile} file={file} url={url} id={index} isimg={false} />
+
+    }
+    return null;
+  };
+
+  return (
+    <main>
+      <div>
+        <label htmlFor="filePicker"  className='p-2 bg-slate-400  '>
+          Add File
+        </label>
+        <input
+          id="filePicker"
+          style={{ visibility: "hidden" }}
+          type="file"
+          multiple
+          ref={inputFile}
+          accept="image/*,video/*"
+          onChange={handleFileChange}
+        />
+      </div>
+      <div className='flex gap-2 '>
+        {media.map((val, index) => renderMedia(val, index))}
+      </div>
+    </main>
+
+  );
+};
+
+export default MediaUploader;
