@@ -1,0 +1,26 @@
+import EditIcon from '@mui/icons-material/Edit';
+import { Paper } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+
+export default function MedaiDisplay({ file, id ,url,isimg,removeMediaFile,onButtonClick}) {
+    return (
+        <Paper className='p-2  '>
+            <p className="flex justify-end "><button onClick={()=>removeMediaFile(id)}>X</button></p>
+            <div className="  ">
+
+
+                {isimg ? <img key={file.name} src={url} alt={file.name} style={{ width: '150px' ,height:'150px'}} />
+                    :
+                    <video key={file.name} src={url} controls style={{ width: '150px' ,height:'150px'}}>
+                        Your browser does not support the video tag.
+                    </video>
+                }
+
+            </div>
+            <p  className='flex justify-end space-x-1'>
+            <button onClick={()=>onButtonClick(id)} > <EditIcon className='h-[10px]'/></button>
+            <button onClick={()=>removeMediaFile(id)} > <DeleteIcon className='h-[10px]'/></button>
+            </p>
+        </Paper >
+    )
+}
