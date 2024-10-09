@@ -1,0 +1,74 @@
+import React, { useState } from 'react';
+
+const useVideoDetails = () => {
+  const [videoDetails, setVideoDetails] = useState(null);
+
+  const getVideoDetails = (videoFile) => {
+    return new Promise((resolve, reject) => {
+      const videoElement = document.createElement('video');
+      const fileReader = new FileReader();
+
+      fileReader.onload = (event) => {
+        videoElement.src = event.target.result;
+
+        videoElement.onloadedmetadata = () => {
+          const duration = videoElement.duration;
+          const thumbnailCanvas = document.createElement('canvas');
+          thumbnailCanvas.width = 320; // Set desired width
+          thumbnailCanvas.height = 180; // Set desired height
+
+          videoElement.currentTime = Math.min(duration / 2, 0); // Capture thumbnail at middle
+
+          videoElement.onseeked = () => {
+            const ctx = thumbnailCanvas.getContext('2d');
+            ctx.drawImage(videoElement, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
+            const thumbnail = thumbnailCanvas.toDataURL('image/jpeg');
+
+            const details = {
+              file: videoFile,
+              duration: duration,
+              thumbnail: thumbnail,
+            };
+            setVideoDetails(details)
+            resolve(details);
+          };
+        };
+      };
+
+      fileReader.onerror = (error) => {
+        reject(error);
+      };
+
+      fileReader.readAsDataURL(videoFile);
+    });
+  };
+
+  return { videoDetails, getVideoDetails };
+};
+
+const VideoUploader = () => {
+  const { videoDetails, getVideoDetails } = useVideoDetails();
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const details = await getVideoDetails(file);
+      console.log(details);
+      // Set the details state or do something with it
+    }
+  };
+  
+  return (
+    <div>
+      <input type="file" accept="video/*" onChange={handleFileChange} />
+      {videoDetails && (
+        <div>
+          <p>Duration: {videoDetails.duration} seconds</p>
+          <img src={videoDetails.thumbnail} alt="Thumbnail" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default VideoUploader;
